@@ -6,14 +6,14 @@ import os
 async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
     try:
         async with aiosqlite.connect('absences.db') as db:
-            async with db.execute('SELECT user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id, tipo FROM absences WHERE id = ? AND status = ?', (absence_id, 'approved')) as cursor:
+            async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id, tipo FROM absences WHERE id = ? AND status = ?', (absence_id, 'approved')) as cursor:
                 row = await cursor.fetchone()
 
             if not row:
                 await interaction.response.send_message('No se encontró una ausencia aprobada con ese ID.', ephemeral=True)
                 return
 
-            user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id, tipo = row
+            absence_id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id, tipo = row
             await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('finished', absence_id))
             await db.commit()
 
@@ -22,7 +22,7 @@ async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
                 approved_message = await public_channel.fetch_message(approved_message_id)
                 embed = approved_message.embeds[0]
                 embed.color = discord.Color.red()
-                embed.set_field_at(3, name="Estado", value="Finalizada", inline=False)
+                embed.set_field_at(5, name="Estado", value="Finalizada", inline=False)
                 await approved_message.edit(embed=embed)
                 await approved_message.clear_reactions()
                 await approved_message.add_reaction('✅')

@@ -23,7 +23,7 @@ async def terminarausencia(interaction: discord.Interaction):
                 approved_message = await public_channel.fetch_message(approved_message_id)
                 embed = approved_message.embeds[0]
                 embed.color = discord.Color.red()
-                embed.set_field_at(3, name="Estado", value="Finalizada", inline=False)
+                embed.set_field_at(5, name="Estado", value="Finalizada", inline=False)
                 await approved_message.edit(embed=embed)
                 await approved_message.clear_reactions()
                 await approved_message.add_reaction('✅')
