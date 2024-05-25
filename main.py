@@ -66,7 +66,7 @@ async def send_startup_message():
 async def on_ready():
     print(f'Bot is ready. Logged in as {bot.user}')
     await create_db()
-    print("Database created.")
+    print("Database checked.")
     check_absences.start()
     print("Started check_absences task.")
     await bot.setup_hook()

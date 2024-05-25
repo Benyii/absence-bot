@@ -1,5 +1,6 @@
 import discord
 import aiosqlite
+import os
 
 class AbsenceButtonView(discord.ui.View):
     def __init__(self):
