@@ -28,7 +28,7 @@ class AbsenceButtonView(discord.ui.View):
 
                 if row:
                     print(f"Found row: {row}")
-                    _, user_id, start_date, end_date, status, reason, public_message_id, _, _ = row
+                    _, user_id, start_date, end_date, status, reason, public_message_id, _, tipo = row
                     await db.execute('UPDATE absences SET status = ?, approver_user_id = ? WHERE id = ?', ('approved', interaction.user.id, absence_id))
                     await db.commit()
                     user = interaction.client.get_user(user_id)
@@ -51,6 +51,7 @@ class AbsenceButtonView(discord.ui.View):
                     embed.add_field(name="Fecha inicio", value=start_date, inline=False)
                     embed.add_field(name="Fecha termino", value=end_date, inline=False)
                     embed.add_field(name="Motivo", value=reason, inline=False)
+                    embed.add_field(name="Tipo de Ausencia", value=tipo, inline=False)
                     embed.add_field(name="Estado", value="Activo", inline=False)
                     embed.add_field(name="Ausencia aprobada por", value=approver_user.mention, inline=False)
 
@@ -87,7 +88,7 @@ class AbsenceButtonView(discord.ui.View):
 
                 if row:
                     print(f"Found row: {row}")
-                    _, user_id, start_date, end_date, status, reason, public_message_id, _, _ = row
+                    _, user_id, start_date, end_date, status, reason, public_message_id, _, tipo = row
                     class DenyReasonModal(discord.ui.Modal, title='Motivo de la Denegación'):
                         reason = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph)
 

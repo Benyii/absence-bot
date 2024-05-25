@@ -6,14 +6,14 @@ import os
 async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
     try:
         async with aiosqlite.connect('absences.db') as db:
-            async with db.execute('SELECT user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id FROM absences WHERE id = ? AND status = ?', (absence_id, 'approved')) as cursor:
+            async with db.execute('SELECT user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id, tipo FROM absences WHERE id = ? AND status = ?', (absence_id, 'approved')) as cursor:
                 row = await cursor.fetchone()
 
             if not row:
                 await interaction.response.send_message('No se encontró una ausencia aprobada con ese ID.', ephemeral=True)
                 return
 
-            user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id = row
+            user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id, tipo = row
             await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('finished', absence_id))
             await db.commit()
 
