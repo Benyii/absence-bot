@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 from dotenv import load_dotenv
 import aiosqlite
@@ -67,7 +67,7 @@ async def on_ready():
     print(f'Bot is ready. Logged in as {bot.user}')
     await create_db()
     print("Database checked.")
-    check_absences.start()
+    check_absences_task.start()
     print("Started check_absences task.")
     await bot.setup_hook()
     print("Bot setup_hook completed.")
@@ -86,6 +86,14 @@ async def sync(interaction: discord.Interaction):
     await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
     await interaction.response.send_message('Comandos slash sincronizados.', ephemeral=True)
     print("Slash commands synced.")
+
+@tasks.loop(hours=24)
+async def check_absences_task():
+    await check_absences(bot)
+
+@check_absences_task.before_loop
+async def before_check_absences():
+    await bot.wait_until_ready()
 
 print("Running bot.")
 bot.run(TOKEN)
