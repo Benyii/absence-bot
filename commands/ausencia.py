@@ -32,26 +32,24 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
             end_date = start_date + timedelta(days=dias)
             formatted_start_date = start_date.strftime('%d-%m-%Y')
             formatted_end_date = end_date.strftime('%d-%m-%Y')
+            
+            validation_channel = interaction.client.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
+            view = AbsenceButtonView()
+            embed = discord.Embed(description=f'**Días:** {dias} - **Motivo:** {motivo}')
+            embed.set_footer(text=str(user.id))
+            validation_message = await validation_channel.send(
+                f'[EN REVISIÓN] **Ausencia de:** {user.mention} (ID: {user.id})',
+                embed=embed,
+                view=view
+            )
+
             await db.execute('''
-                INSERT INTO absences (user_id, start_date, end_date, status, reason)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (user.id, formatted_start_date, formatted_end_date, 'pending', motivo))
+                INSERT INTO absences (user_id, start_date, end_date, status, reason, message_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user.id, formatted_start_date, formatted_end_date, 'pending', motivo, validation_message.id))
             await db.commit()
 
-            async with db.execute('SELECT last_insert_rowid()') as cursor:
-                absence_id = (await cursor.fetchone())[0]
-
-        await interaction.response.send_message(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {absence_id})')
-
-        validation_channel = interaction.client.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
-        view = AbsenceButtonView()
-        embed = discord.Embed(description=f'**Días:** {dias} - **Motivo:** {motivo}')
-        embed.set_footer(text=str(absence_id))
-        await validation_channel.send(
-            f'[EN REVISIÓN] **Ausencia de:** {user.mention} (ID: {absence_id})',
-            embed=embed,
-            view=view
-        )
+        await interaction.response.send_message(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {user.id})')
     except Exception as e:
         print(f'Error in /ausencia command: {e}')
 

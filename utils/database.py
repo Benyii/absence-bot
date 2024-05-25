@@ -13,7 +13,8 @@ async def create_db():
                     start_date TEXT,
                     end_date TEXT,
                     status TEXT,
-                    reason TEXT
+                    reason TEXT,
+                    message_id INTEGER
                 )
             ''')
             await db.commit()
