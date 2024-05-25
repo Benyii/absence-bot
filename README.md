@@ -1,0 +1,2 @@
+# absence-bot
+ 
