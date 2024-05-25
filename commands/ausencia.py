@@ -37,21 +37,25 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
             public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
             public_message = await public_channel.send(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {user.id})')
 
-            validation_channel = interaction.client.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
-            view = AbsenceButtonView()
-            embed = discord.Embed(description=f'**Días:** {dias} - **Motivo:** {motivo}')
-            embed.set_footer(text=str(user.id))
-            validation_message = await validation_channel.send(
-                f'[EN REVISIÓN] **Ausencia de:** {user.mention} (ID: {user.id})',
-                embed=embed,
-                view=view
-            )
-
             await db.execute('''
                 INSERT INTO absences (user_id, start_date, end_date, status, reason, public_message_id)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (user.id, formatted_start_date, formatted_end_date, 'pending', motivo, public_message.id))
             await db.commit()
+
+            cursor = await db.execute('SELECT last_insert_rowid()')
+            absence_id = (await cursor.fetchone())[0]
+            await cursor.close()
+
+            validation_channel = interaction.client.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
+            view = AbsenceButtonView(absence_id)
+            embed = discord.Embed(description=f'**Días:** {dias} - **Motivo:** {motivo}')
+            embed.set_footer(text=str(absence_id))
+            await validation_channel.send(
+                f'[EN REVISIÓN] **Ausencia de:** {user.mention} (ID: {absence_id})',
+                embed=embed,
+                view=view
+            )
 
         await interaction.response.send_message(f'Se ha registrado tu ausencia para revisión.', ephemeral=True)
     except Exception as e:

@@ -3,8 +3,9 @@ import aiosqlite
 import os
 
 class AbsenceButtonView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, absence_id: int = None):
         super().__init__(timeout=None)
+        self.absence_id = absence_id
 
     @discord.ui.button(label="Aprobar", style=discord.ButtonStyle.green, custom_id="approve")
     async def approve(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -14,17 +15,21 @@ class AbsenceButtonView(discord.ui.View):
                 await interaction.response.send_message('No tienes permiso para realizar esta acción.', ephemeral=True)
                 return
 
-            user_id = int(interaction.message.embeds[0].footer.text)
-            print(f"Processing approval for user ID: {user_id}")
+            absence_id = self.absence_id
+            if absence_id is None:
+                await interaction.response.send_message('Error: no se encontró el ID de la ausencia.', ephemeral=True)
+                return
+
+            print(f"Processing approval for absence ID: {absence_id}")
 
             async with aiosqlite.connect('absences.db') as db:
-                async with db.execute('SELECT * FROM absences WHERE user_id = ? AND status = ?', (user_id, 'pending')) as cursor:
+                async with db.execute('SELECT * FROM absences WHERE id = ? AND status = ?', (absence_id, 'pending')) as cursor:
                     row = await cursor.fetchone()
 
                 if row:
                     print(f"Found row: {row}")
-                    absence_id, user_id, start_date, end_date, status, reason, public_message_id, _ = row
-                    await db.execute('UPDATE absences SET status = ? WHERE user_id = ?', ('approved', user_id))
+                    _, user_id, start_date, end_date, status, reason, public_message_id, _, _ = row
+                    await db.execute('UPDATE absences SET status = ?, approver_user_id = ? WHERE id = ?', ('approved', interaction.user.id, absence_id))
                     await db.commit()
                     user = interaction.client.get_user(user_id)
                     await user.send(f'Su ausencia ha sido aprobada.')
@@ -40,15 +45,21 @@ class AbsenceButtonView(discord.ui.View):
                     except discord.NotFound:
                         print(f"Public message with ID {public_message_id} not found.")
                     
-                    approved_message = await public_channel.send(
-                        f':green_circle: **Ausencia de:** {user.mention} (ID: {absence_id}) - **Desde:** {start_date} - **Hasta:** {end_date} - **Motivo:** {reason}'
-                    )
+                    approver_user = interaction.client.get_user(interaction.user.id)
+                    embed = discord.Embed(title=f"Ausencia - ID: {absence_id}", color=discord.Color.green())
+                    embed.add_field(name="Nombre", value=user.mention, inline=False)
+                    embed.add_field(name="Fecha inicio", value=start_date, inline=False)
+                    embed.add_field(name="Fecha termino", value=end_date, inline=False)
+                    embed.add_field(name="Estado", value="Activo", inline=False)
+                    embed.add_field(name="Ausencia aprobada por", value=approver_user.mention, inline=False)
+
+                    approved_message = await public_channel.send(embed=embed)
                     await approved_message.add_reaction('⏳')
 
                     await db.execute('UPDATE absences SET approved_message_id = ? WHERE id = ?', (approved_message.id, absence_id))
                     await db.commit()
                 else:
-                    print(f"No row found for user ID: {user_id}")
+                    print(f"No row found for absence ID: {absence_id}")
                     await interaction.response.send_message('Ausencia no encontrada o ya procesada.', ephemeral=True)
         except Exception as e:
             print(f'Error in approve button: {e}')
@@ -62,22 +73,26 @@ class AbsenceButtonView(discord.ui.View):
                 await interaction.response.send_message('No tienes permiso para realizar esta acción.', ephemeral=True)
                 return
 
-            user_id = int(interaction.message.embeds[0].footer.text)
-            print(f"Processing denial for user ID: {user_id}")
+            absence_id = self.absence_id
+            if absence_id is None:
+                await interaction.response.send_message('Error: no se encontró el ID de la ausencia.', ephemeral=True)
+                return
+
+            print(f"Processing denial for absence ID: {absence_id}")
 
             async with aiosqlite.connect('absences.db') as db:
-                async with db.execute('SELECT * FROM absences WHERE user_id = ? AND status = ?', (user_id, 'pending')) as cursor:
+                async with db.execute('SELECT * FROM absences WHERE id = ? AND status = ?', (absence_id, 'pending')) as cursor:
                     row = await cursor.fetchone()
 
                 if row:
                     print(f"Found row: {row}")
-                    absence_id, user_id, start_date, end_date, status, reason, public_message_id, _ = row
+                    _, user_id, start_date, end_date, status, reason, public_message_id, _, _ = row
                     class DenyReasonModal(discord.ui.Modal, title='Motivo de la Denegación'):
                         reason = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph)
 
                         async def on_submit(self, interaction: discord.Interaction):
                             async with aiosqlite.connect('absences.db') as db:
-                                await db.execute('UPDATE absences SET status = ?, reason = ? WHERE user_id = ?', ('denied', self.reason.value, user_id))
+                                await db.execute('UPDATE absences SET status = ?, reason = ?, approver_user_id = ? WHERE id = ?', ('denied', self.reason.value, interaction.user.id, absence_id))
                                 await db.commit()
                             user = interaction.client.get_user(user_id)
                             await user.send(f'Tu ausencia ha sido denegada por el motivo: {self.reason.value}')
@@ -101,7 +116,7 @@ class AbsenceButtonView(discord.ui.View):
                     modal = DenyReasonModal()
                     await interaction.response.send_modal(modal)
                 else:
-                    print(f"No row found for user ID: {user_id}")
+                    print(f"No row found for absence ID: {absence_id}")
                     await interaction.response.send_message('Ausencia no encontrada o ya procesada.', ephemeral=True)
         except Exception as e:
             print(f'Error in deny button: {e}')

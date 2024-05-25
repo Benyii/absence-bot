@@ -15,7 +15,8 @@ async def create_db():
                     status TEXT,
                     reason TEXT,
                     public_message_id INTEGER,
-                    approved_message_id INTEGER
+                    approved_message_id INTEGER,
+                    approver_user_id INTEGER
                 )
             ''')
             await db.commit()

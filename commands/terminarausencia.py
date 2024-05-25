@@ -7,23 +7,26 @@ async def terminarausencia(interaction: discord.Interaction):
     try:
         user = interaction.user
         async with aiosqlite.connect('absences.db') as db:
-            async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id FROM absences WHERE user_id = ? AND status = ?', (user.id, 'approved')) as cursor:
+            async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id FROM absences WHERE user_id = ? AND status = ?', (user.id, 'approved')) as cursor:
                 row = await cursor.fetchone()
 
             if not row:
                 await interaction.response.send_message('No tienes ausencias aprobadas actualmente.', ephemeral=True)
                 return
 
-            absence_id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id = row
+            absence_id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id, approver_user_id = row
             await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('finished', absence_id))
             await db.commit()
 
             public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
             try:
                 approved_message = await public_channel.fetch_message(approved_message_id)
+                embed = approved_message.embeds[0]
+                embed.color = discord.Color.red()
+                embed.set_field_at(3, name="Estado", value="Finalizada", inline=False)
+                await approved_message.edit(embed=embed)
                 await approved_message.clear_reactions()
                 await approved_message.add_reaction('✅')
-                await approved_message.edit(content=approved_message.content.replace(":green_circle:", ":red_circle:"))
             except discord.NotFound:
                 print(f"Approved message with ID {approved_message_id} not found.")
 
