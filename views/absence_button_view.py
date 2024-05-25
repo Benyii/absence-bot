@@ -50,6 +50,7 @@ class AbsenceButtonView(discord.ui.View):
                     embed.add_field(name="Nombre", value=user.mention, inline=False)
                     embed.add_field(name="Fecha inicio", value=start_date, inline=False)
                     embed.add_field(name="Fecha termino", value=end_date, inline=False)
+                    embed.add_field(name="Motivo", value=reason, inline=False)
                     embed.add_field(name="Estado", value="Activo", inline=False)
                     embed.add_field(name="Ausencia aprobada por", value=approver_user.mention, inline=False)
 
