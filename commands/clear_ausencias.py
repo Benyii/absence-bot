@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 import aiosqlite
 
 async def clear_ausencias(interaction: discord.Interaction):
