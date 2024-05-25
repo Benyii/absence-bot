@@ -16,6 +16,7 @@ print("Loaded .env file.")
 
 TOKEN = os.getenv('TOKEN')
 LOG_CHANNEL_ID = int(os.getenv('LOG_CHANNEL_ID'))
+GUILD_ID = int(os.getenv('GUILD_ID'))
 print(f"TOKEN: {TOKEN}")
 print(f"LOG_CHANNEL_ID: {LOG_CHANNEL_ID}")
 
@@ -78,6 +79,13 @@ async def on_ready():
 # Registrar comandos
 register_commands(bot)
 print("Commands registered.")
+
+# Comando para sincronizar los comandos slash
+@bot.tree.command(name='sync', description="Sincroniza los comandos slash del bot")
+async def sync(interaction: discord.Interaction):
+    await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    await interaction.response.send_message('Comandos slash sincronizados.', ephemeral=True)
+    print("Slash commands synced.")
 
 print("Running bot.")
 bot.run(TOKEN)
