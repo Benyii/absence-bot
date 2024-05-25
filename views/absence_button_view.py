@@ -32,7 +32,7 @@ class AbsenceButtonView(discord.ui.View):
                     await db.execute('UPDATE absences SET status = ?, approver_user_id = ? WHERE id = ?', ('approved', interaction.user.id, absence_id))
                     await db.commit()
                     user = interaction.client.get_user(user_id)
-                    await user.send(f'Su ausencia ha sido aprobada.')
+                    await user.send(f'Su ausencia ha sido aprobada por el Command Staff. Se te enviará un recordatorio cuando esté apunto de vencer :)')
                     await interaction.response.send_message(f'Ausencia aprobada para {user.mention}', ephemeral=True)
 
                     updated_content = interaction.message.content.replace("[EN REVISIÓN]", "[APROBADO]")
@@ -98,7 +98,7 @@ class AbsenceButtonView(discord.ui.View):
                                 await db.execute('UPDATE absences SET status = ?, reason = ?, approver_user_id = ? WHERE id = ?', ('denied', self.reason.value, interaction.user.id, absence_id))
                                 await db.commit()
                             user = interaction.client.get_user(user_id)
-                            await user.send(f'Tu ausencia ha sido denegada por el motivo: {self.reason.value}')
+                            await user.send(f'Tu ausencia ha sido **DENEGADA** por el motivo: {self.reason.value}. En caso que esto sea un error, comunicate con el Command Staff a través del sistema de #generar-ticket')
                             await interaction.response.send_message(f'Ausencia denegada para {user.mention} con el motivo: {self.reason.value}', ephemeral=True)
                             updated_content = interaction.message.content.replace("[EN REVISIÓN]", "[DENEGADO]")
                             await interaction.message.edit(content=updated_content, view=None)

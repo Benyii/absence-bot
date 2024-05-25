@@ -49,7 +49,7 @@ class AbsenceModal(discord.ui.Modal, title='Registrar Ausencia'):
 
             # Enviar el mensaje público y obtener el ID
             public_channel = self.interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
-            public_message = await public_channel.send(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {user.id})')
+            public_message = await public_channel.send(f'Una **ausencia de:** {user.mention} se encuentra en revisión por el Command Staff.')
 
             await db.execute('''
                 INSERT INTO absences (user_id, start_date, end_date, status, reason, public_message_id, tipo)
@@ -71,4 +71,4 @@ class AbsenceModal(discord.ui.Modal, title='Registrar Ausencia'):
                 view=view
             )
 
-        await interaction.response.send_message(f'Se ha registrado tu ausencia para revisión.', ephemeral=True)
+        await interaction.response.send_message(f'Se ha registrado tu ausencia para revisión. Recibirás un mensaje en caso de que tu ausencia sea aprobada.', ephemeral=True)
