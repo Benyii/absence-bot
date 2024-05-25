@@ -76,9 +76,6 @@ class AbsenceModal(discord.ui.Modal, title='Registrar Ausencia'):
             if log_channel:
                 role_mention_1 = '<@&1131273125376557093>'
                 role_mention_2 = '<@&1131273125322043510>'
-                await log_channel.send(
-                    content=f'{role_mention_1} {role_mention_2}\nNueva ausencia registrada por {user.mention}.',
-                    embed=embed
-                )
+                await log_channel.send(content=f'{role_mention_1} {role_mention_2}\nNueva ausencia registrada por {user.mention}.')
 
         await interaction.response.send_message(f'Se ha registrado tu ausencia para revisión. Recibirás un mensaje en caso de que tu ausencia sea aprobada.', ephemeral=True)
