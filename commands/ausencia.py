@@ -3,6 +3,7 @@ from discord import app_commands
 import aiosqlite
 from datetime import datetime, timedelta
 from views.absence_button_view import AbsenceButtonView
+import os
 
 async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
     try:

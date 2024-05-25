@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 import aiosqlite
+import os
 
 async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
     try:
