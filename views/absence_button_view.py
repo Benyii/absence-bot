@@ -23,7 +23,7 @@ class AbsenceButtonView(discord.ui.View):
 
                 if row:
                     print(f"Found row: {row}")
-                    absence_id, user_id, start_date, end_date, status, reason, message_id = row
+                    absence_id, user_id, start_date, end_date, status, reason, public_message_id = row
                     await db.execute('UPDATE absences SET status = ? WHERE user_id = ?', ('approved', user_id))
                     await db.commit()
                     user = interaction.client.get_user(user_id)
@@ -34,11 +34,12 @@ class AbsenceButtonView(discord.ui.View):
                     await interaction.message.edit(content=updated_content, view=None)
 
                     public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
-                    async for message in public_channel.history(limit=200):
-                        if message.id == message_id:
-                            await message.delete()
-                            break
-
+                    try:
+                        public_message = await public_channel.fetch_message(public_message_id)
+                        await public_message.delete()
+                    except discord.NotFound:
+                        print(f"Public message with ID {public_message_id} not found.")
+                    
                     approved_message = await public_channel.send(
                         f':green_circle: **Ausencia de:** {user.mention} (ID: {absence_id}) - **Desde:** {start_date} - **Hasta:** {end_date} - **Motivo:** {reason}'
                     )
@@ -67,7 +68,7 @@ class AbsenceButtonView(discord.ui.View):
 
                 if row:
                     print(f"Found row: {row}")
-                    absence_id, user_id, start_date, end_date, status, reason, message_id = row
+                    absence_id, user_id, start_date, end_date, status, reason, public_message_id = row
                     class DenyReasonModal(discord.ui.Modal, title='Motivo de la Denegación'):
                         reason = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph)
 
@@ -88,10 +89,11 @@ class AbsenceButtonView(discord.ui.View):
                             await log_message.edit(embed=embed)
 
                             public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
-                            async for message in public_channel.history(limit=200):
-                                if message.id == message_id:
-                                    await message.delete()
-                                    break
+                            try:
+                                public_message = await public_channel.fetch_message(public_message_id)
+                                await public_message.delete()
+                            except discord.NotFound:
+                                print(f"Public message with ID {public_message_id} not found.")
 
                     modal = DenyReasonModal()
                     await interaction.response.send_modal(modal)

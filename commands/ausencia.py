@@ -32,7 +32,11 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
             end_date = start_date + timedelta(days=dias)
             formatted_start_date = start_date.strftime('%d-%m-%Y')
             formatted_end_date = end_date.strftime('%d-%m-%Y')
-            
+
+            # Enviar el mensaje público y obtener el ID
+            public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
+            public_message = await public_channel.send(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {user.id})')
+
             validation_channel = interaction.client.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
             view = AbsenceButtonView()
             embed = discord.Embed(description=f'**Días:** {dias} - **Motivo:** {motivo}')
@@ -46,10 +50,10 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
             await db.execute('''
                 INSERT INTO absences (user_id, start_date, end_date, status, reason, message_id)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user.id, formatted_start_date, formatted_end_date, 'pending', motivo, validation_message.id))
+            ''', (user.id, formatted_start_date, formatted_end_date, 'pending', motivo, public_message.id))
             await db.commit()
 
-        await interaction.response.send_message(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {user.id})')
+        await interaction.response.send_message(f'Se ha registrado tu ausencia para revisión.', ephemeral=True)
     except Exception as e:
         print(f'Error in /ausencia command: {e}')
 
