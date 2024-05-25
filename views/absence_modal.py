@@ -5,26 +5,21 @@ from views.absence_button_view import AbsenceButtonView
 import os
 
 class AbsenceModal(discord.ui.Modal, title='Registrar Ausencia'):
-    dias = discord.ui.TextInput(label='Días de ausencia', style=discord.TextStyle.short, placeholder='Número de días de ausencia', required=True, custom_id='dias')
-    motivo = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph, placeholder='Describe el motivo de tu ausencia', required=True, custom_id='motivo')
-    tipo = discord.ui.Select(
-        placeholder='Selecciona el tipo de ausencia',
-        options=[
-            discord.SelectOption(label='AAR', description='Ausencia de Actividad Reducida'),
-            discord.SelectOption(label='ATC', description='Ausencia de Tiempo Completo')
-        ],
-        custom_id='tipo'
-    )
-
     def __init__(self, interaction: discord.Interaction):
-        super().__init__()
+        super().__init__(title="Registrar Ausencia")
         self.interaction = interaction
+        self.dias = discord.ui.TextInput(label='Días de ausencia', style=discord.TextStyle.short, placeholder='Número de días de ausencia', required=True, custom_id='dias_ausencia')
+        self.motivo = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph, placeholder='Describe el motivo de tu ausencia', required=True, custom_id='motivo_ausencia')
+        self.tipo = discord.ui.TextInput(label='Tipo de ausencia (AAR o ATC)', style=discord.TextStyle.short, placeholder='Indica AAR o ATC', required=True, custom_id='tipo_ausencia')
+
+        self.add_item(self.dias)
+        self.add_item(self.motivo)
         self.add_item(self.tipo)
 
     async def on_submit(self, interaction: discord.Interaction):
         dias = int(self.dias.value)
         motivo = self.motivo.value
-        tipo = self.tipo.values[0]
+        tipo = self.tipo.value.upper()
 
         if dias <= 0:
             await interaction.response.send_message('El número de días debe ser un número positivo.', ephemeral=True)
@@ -32,6 +27,10 @@ class AbsenceModal(discord.ui.Modal, title='Registrar Ausencia'):
 
         if dias > 7:
             await interaction.response.send_message('Aquí solo se pueden postear ausencias con un máximo de 7 días. En caso de realizarse una ausencia por más tiempo o indefinido, realizar la solicitud por el canal #generar-ticket', ephemeral=True)
+            return
+
+        if tipo not in ['AAR', 'ATC']:
+            await interaction.response.send_message('El tipo de ausencia debe ser AAR o ATC.', ephemeral=True)
             return
 
         user = self.interaction.user

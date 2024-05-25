@@ -23,12 +23,12 @@ class AbsenceButtonView(discord.ui.View):
             print(f"Processing approval for absence ID: {absence_id}")
 
             async with aiosqlite.connect('absences.db') as db:
-                async with db.execute('SELECT * FROM absences WHERE id = ? AND status = ?', (absence_id, 'pending')) as cursor:
+                async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, public_message_id, approver_user_id, tipo FROM absences WHERE id = ? AND status = ?', (absence_id, 'pending')) as cursor:
                     row = await cursor.fetchone()
 
                 if row:
                     print(f"Found row: {row}")
-                    _, user_id, start_date, end_date, status, reason, public_message_id, _, tipo = row
+                    absence_id, user_id, start_date, end_date, status, reason, public_message_id, approver_user_id, tipo = row
                     await db.execute('UPDATE absences SET status = ?, approver_user_id = ? WHERE id = ?', ('approved', interaction.user.id, absence_id))
                     await db.commit()
                     user = interaction.client.get_user(user_id)
@@ -83,12 +83,13 @@ class AbsenceButtonView(discord.ui.View):
             print(f"Processing denial for absence ID: {absence_id}")
 
             async with aiosqlite.connect('absences.db') as db:
-                async with db.execute('SELECT * FROM absences WHERE id = ? AND status = ?', (absence_id, 'pending')) as cursor:
+                async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, public_message_id, approver_user_id, tipo FROM absences WHERE id = ? AND status = ?', (absence_id, 'pending')) as cursor:
                     row = await cursor.fetchone()
 
                 if row:
                     print(f"Found row: {row}")
-                    _, user_id, start_date, end_date, status, reason, public_message_id, _, tipo = row
+                    absence_id, user_id, start_date, end_date, status, reason, public_message_id, approver_user_id, tipo = row
+
                     class DenyReasonModal(discord.ui.Modal, title='Motivo de la Denegación'):
                         reason = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph)
 
