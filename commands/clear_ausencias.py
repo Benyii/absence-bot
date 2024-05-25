@@ -1,8 +1,6 @@
 import discord
-from absence_bot import AbsenceBot
 import aiosqlite
 
-@bot.tree.command(name='clear_ausencias', description="Borra todas las ausencias registradas en la base de datos")
 async def clear_ausencias(interaction: discord.Interaction):
     try:
         if not any(role.id == int(os.getenv('APPROVER_ROLE_ID')) for role in interaction.user.roles):
@@ -16,3 +14,6 @@ async def clear_ausencias(interaction: discord.Interaction):
         await interaction.response.send_message('Todas las ausencias han sido borradas.', ephemeral=True)
     except Exception as e:
         print(f'Error in /clear_ausencias command: {e}')
+
+def setup(bot):
+    bot.tree.add_command(app_commands.Command(name='clear_ausencias', description="Borra todas las ausencias registradas en la base de datos", callback=clear_ausencias))

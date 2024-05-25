@@ -1,8 +1,6 @@
 import discord
-from absence_bot import AbsenceBot
 import aiosqlite
 
-@bot.tree.command(name='terminarausencia', description="Termina manualmente tu última ausencia")
 async def terminarausencia(interaction: discord.Interaction):
     try:
         user = interaction.user
@@ -18,7 +16,7 @@ async def terminarausencia(interaction: discord.Interaction):
             await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('finished', absence_id))
             await db.commit()
 
-            public_channel = bot.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
+            public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
             async for message in public_channel.history(limit=200):
                 if f'Ausencia ID: {absence_id}' in message.content:
                     await message.clear_reactions()
@@ -29,3 +27,6 @@ async def terminarausencia(interaction: discord.Interaction):
         await interaction.response.send_message('Tu ausencia ha sido marcada como terminada.', ephemeral=True)
     except Exception as e:
         print(f'Error in /terminarausencia command: {e}')
+
+def setup(bot):
+    bot.tree.add_command(app_commands.Command(name='terminarausencia', description="Termina manualmente tu última ausencia", callback=terminarausencia))

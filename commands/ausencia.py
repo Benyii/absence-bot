@@ -3,10 +3,7 @@ from discord import app_commands
 import aiosqlite
 from datetime import datetime, timedelta
 from views.absence_button_view import AbsenceButtonView
-from absence_bot import AbsenceBot
 
-@bot.tree.command(name='ausencia', description="Registra una ausencia indicando el número de días y el motivo")
-@app_commands.describe(dias='Número de días de ausencia', motivo='Motivo de la ausencia')
 async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
     try:
         if dias <= 0:
@@ -45,7 +42,7 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
 
         await interaction.response.send_message(f'[EN REVISIÓN] **Ausencia de:** {user.mention} - **Días:** {dias} - **Motivo:** {motivo} (ID: {absence_id})')
 
-        validation_channel = bot.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
+        validation_channel = interaction.client.get_channel(int(os.getenv('VALIDATION_CHANNEL_ID')))
         view = AbsenceButtonView()
         embed = discord.Embed(description=f'**Días:** {dias} - **Motivo:** {motivo}')
         embed.set_footer(text=str(absence_id))
@@ -56,3 +53,6 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
         )
     except Exception as e:
         print(f'Error in /ausencia command: {e}')
+
+def setup(bot):
+    bot.tree.add_command(app_commands.Command(name='ausencia', description="Registra una ausencia indicando el número de días y el motivo", callback=ausencia))

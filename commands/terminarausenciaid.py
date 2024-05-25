@@ -1,9 +1,6 @@
 import discord
-from absence_bot import AbsenceBot
 import aiosqlite
 
-@bot.tree.command(name='terminarausenciaid', description="Termina manualmente una ausencia específica por ID")
-@app_commands.describe(absence_id='ID de la ausencia a terminar')
 async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
     try:
         if not any(role.id == int(os.getenv('APPROVER_ROLE_ID')) for role in interaction.user.roles):
@@ -22,8 +19,8 @@ async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
             await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('finished', absence_id))
             await db.commit()
 
-            user = bot.get_user(user_id)
-            public_channel = bot.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
+            user = interaction.client.get_user(user_id)
+            public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
             async for message in public_channel.history(limit=200):
                 if f'Ausencia ID: {absence_id}' in message.content:
                     await message.clear_reactions()
@@ -34,3 +31,6 @@ async def terminarausenciaid(interaction: discord.Interaction, absence_id: int):
         await interaction.response.send_message(f'La ausencia con ID {absence_id} ha sido marcada como terminada.', ephemeral=True)
     except Exception as e:
         print(f'Error in /terminarausenciaid command: {e}')
+
+def setup(bot):
+    bot.tree.add_command(app_commands.Command(name='terminarausenciaid', description="Termina manualmente una ausencia específica por ID", callback=terminarausenciaid))

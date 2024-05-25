@@ -1,6 +1,5 @@
 import discord
 import aiosqlite
-from absence_bot import AbsenceBot
 
 class AbsenceButtonView(discord.ui.View):
     def __init__(self):
@@ -26,14 +25,14 @@ class AbsenceButtonView(discord.ui.View):
                     user_id, start_date, end_date, motivo = row[1], row[2], row[3], row[5]
                     await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('approved', absence_id))
                     await db.commit()
-                    user = bot.get_user(user_id)
+                    user = interaction.client.get_user(user_id)
                     await user.send(f'Su ausencia ha sido aprobada.')
                     await interaction.response.send_message(f'Ausencia aprobada para {user.mention}', ephemeral=True)
 
                     updated_content = interaction.message.content.replace("[EN REVISIÓN]", "[APROBADO]")
                     await interaction.message.edit(content=updated_content, view=None)
 
-                    public_channel = bot.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
+                    public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
                     async for message in public_channel.history(limit=200):
                         if f'**Ausencia de:** {user.mention} (ID: {absence_id})' in message.content:
                             await message.delete()
@@ -75,19 +74,19 @@ class AbsenceButtonView(discord.ui.View):
                                 await db.execute('UPDATE absences SET status = ?, reason = ? WHERE id = ?', ('denied', self.reason.value, absence_id))
                                 await db.commit()
                             user_id = row[1]
-                            user = bot.get_user(user_id)
+                            user = interaction.client.get_user(user_id)
                             await user.send(f'Tu ausencia ha sido denegada por el motivo: {self.reason.value}')
                             await interaction.response.send_message(f'Ausencia denegada para {user.mention} con el motivo: {self.reason.value}', ephemeral=True)
                             updated_content = interaction.message.content.replace("[EN REVISIÓN]", "[DENEGADO]")
                             await interaction.message.edit(content=updated_content, view=None)
 
-                            log_channel = bot.get_channel(int(os.getenv('LOG_CHANNEL_ID')))
+                            log_channel = interaction.client.get_channel(int(os.getenv('LOG_CHANNEL_ID')))
                             log_message = await log_channel.fetch_message(interaction.message.id)
                             embed = log_message.embeds[0]
                             embed.add_field(name="Motivo de la Denegación", value=self.reason.value)
                             await log_message.edit(embed=embed)
 
-                            public_channel = bot.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
+                            public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
                             async for message in public_channel.history(limit=200):
                                 if f'**Ausencia de:** {user.mention} (ID: {absence_id})' in message.content:
                                     await message.delete()
