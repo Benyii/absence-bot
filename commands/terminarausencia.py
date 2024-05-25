@@ -7,25 +7,25 @@ async def terminarausencia(interaction: discord.Interaction):
     try:
         user = interaction.user
         async with aiosqlite.connect('absences.db') as db:
-            async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, message_id FROM absences WHERE user_id = ? AND status = ?', (user.id, 'approved')) as cursor:
+            async with db.execute('SELECT id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id FROM absences WHERE user_id = ? AND status = ?', (user.id, 'approved')) as cursor:
                 row = await cursor.fetchone()
 
             if not row:
                 await interaction.response.send_message('No tienes ausencias aprobadas actualmente.', ephemeral=True)
                 return
 
-            absence_id, user_id, start_date, end_date, status, reason, message_id = row
+            absence_id, user_id, start_date, end_date, status, reason, public_message_id, approved_message_id = row
             await db.execute('UPDATE absences SET status = ? WHERE id = ?', ('finished', absence_id))
             await db.commit()
 
             public_channel = interaction.client.get_channel(int(os.getenv('PUBLIC_CHANNEL_ID')))
             try:
-                public_message = await public_channel.fetch_message(message_id)
-                await public_message.clear_reactions()
-                await public_message.add_reaction('✅')
-                await public_message.edit(content=public_message.content.replace(":green_circle:", ":red_circle:"))
+                approved_message = await public_channel.fetch_message(approved_message_id)
+                await approved_message.clear_reactions()
+                await approved_message.add_reaction('✅')
+                await approved_message.edit(content=approved_message.content.replace(":green_circle:", ":red_circle:"))
             except discord.NotFound:
-                print(f"Public message with ID {message_id} not found.")
+                print(f"Approved message with ID {approved_message_id} not found.")
 
         await interaction.response.send_message('Tu ausencia ha sido marcada como terminada.', ephemeral=True)
     except Exception as e:

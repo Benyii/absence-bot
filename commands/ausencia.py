@@ -48,7 +48,7 @@ async def ausencia(interaction: discord.Interaction, dias: int, motivo: str):
             )
 
             await db.execute('''
-                INSERT INTO absences (user_id, start_date, end_date, status, reason, message_id)
+                INSERT INTO absences (user_id, start_date, end_date, status, reason, public_message_id)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (user.id, formatted_start_date, formatted_end_date, 'pending', motivo, public_message.id))
             await db.commit()

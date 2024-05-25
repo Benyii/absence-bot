@@ -23,7 +23,7 @@ class AbsenceButtonView(discord.ui.View):
 
                 if row:
                     print(f"Found row: {row}")
-                    absence_id, user_id, start_date, end_date, status, reason, public_message_id = row
+                    absence_id, user_id, start_date, end_date, status, reason, public_message_id, _ = row
                     await db.execute('UPDATE absences SET status = ? WHERE user_id = ?', ('approved', user_id))
                     await db.commit()
                     user = interaction.client.get_user(user_id)
@@ -44,6 +44,9 @@ class AbsenceButtonView(discord.ui.View):
                         f':green_circle: **Ausencia de:** {user.mention} (ID: {absence_id}) - **Desde:** {start_date} - **Hasta:** {end_date} - **Motivo:** {reason}'
                     )
                     await approved_message.add_reaction('⏳')
+
+                    await db.execute('UPDATE absences SET approved_message_id = ? WHERE id = ?', (approved_message.id, absence_id))
+                    await db.commit()
                 else:
                     print(f"No row found for user ID: {user_id}")
                     await interaction.response.send_message('Ausencia no encontrada o ya procesada.', ephemeral=True)
@@ -68,7 +71,7 @@ class AbsenceButtonView(discord.ui.View):
 
                 if row:
                     print(f"Found row: {row}")
-                    absence_id, user_id, start_date, end_date, status, reason, public_message_id = row
+                    absence_id, user_id, start_date, end_date, status, reason, public_message_id, _ = row
                     class DenyReasonModal(discord.ui.Modal, title='Motivo de la Denegación'):
                         reason = discord.ui.TextInput(label='Motivo', style=discord.TextStyle.paragraph)
 
